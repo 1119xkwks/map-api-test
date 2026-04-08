@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://ep-lively-queen-a108xbm2.ap-southeast-1.aws.neon.tech:5432/neondb
+    username: neondb_owner
+    password: npg_7X0lSJYogdsT
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.mapapi.dto
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  kakao:
+    rest-api-key: ddd51e4da3f7e47883aa6b960abdf485
+    javascript-key: 5190137934e305e271866e4f726d2c01
+  data-go-kr:
+    service-key: d7e3cecc3341eb9d72bcb1019dd4d2880e524c6d5d1faebe672db1f3914f76ca

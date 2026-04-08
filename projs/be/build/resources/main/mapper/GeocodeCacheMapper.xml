@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mapapi.mapper.GeocodeCacheMapper">
+
+    <!-- 주소로 좌표 조회 (캐시 히트) -->
+    <select id="findByAddress" resultType="map">
+        SELECT lat, lng
+        FROM geocode_cache
+        WHERE address = #{address}
+    </select>
+
+    <!-- geocoding 결과 저장 (중복 시 무시) -->
+    <insert id="insertIfNotExists">
+        INSERT INTO geocode_cache (address, lat, lng)
+        VALUES (#{address}, #{lat}, #{lng})
+        ON CONFLICT (address) DO NOTHING
+    </insert>
+
+    <!-- 여러 주소를 한번에 조회 (일괄 geocoding 최적화) -->
+    <select id="findByAddresses" resultType="map">
+        SELECT address, lat, lng
+        FROM geocode_cache
+        WHERE address IN
+            <foreach item="addr" collection="addresses" open="(" separator="," close=")">
+                #{addr}
+            </foreach>
+    </select>
+
+</mapper>

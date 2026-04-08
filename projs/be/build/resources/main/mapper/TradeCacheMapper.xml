@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mapapi.mapper.TradeCacheMapper">
+
+    <!-- 캐시 히트 판정: 시군구+년월의 데이터 존재 여부 및 최종 조회 시각 확인 -->
+    <select id="checkCacheStatus" resultType="map">
+        SELECT COUNT(*) AS cnt, MAX(fetched_at) AS last_fetched
+        FROM apt_trade_cache
+        WHERE sgg_cd = #{sggCd} AND deal_ymd = #{dealYmd}
+    </select>
+
+    <!-- bounds 범위 내 거래 데이터 조회 -->
+    <select id="findByBounds" resultType="com.mapapi.dto.TradeItem">
+        SELECT apt_nm, deal_amount, lat, lng, exclu_use_ar, floor,
+               deal_year, deal_month, deal_day, build_year,
+               umd_nm, jibun, road_nm, sgg_cd, cdeal_type, dealing_gbn
+        FROM apt_trade_cache
+        WHERE sgg_cd IN
+            <foreach item="code" collection="sggCodes" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+          AND deal_ymd = #{dealYmd}
+          AND lat IS NOT NULL
+          AND lng IS NOT NULL
+          AND lat BETWEEN #{swLat} AND #{neLat}
+          AND lng BETWEEN #{swLng} AND #{neLng}
+        ORDER BY deal_year DESC, deal_month DESC, deal_day DESC
+    </select>
+
+    <!-- 거래 캐시 일괄 저장 -->
+    <insert id="insertBatch">
+        INSERT INTO apt_trade_cache (
+            sgg_cd, deal_ymd, apt_nm, deal_amount, exclu_use_ar,
+            floor, build_year, deal_year, deal_month, deal_day,
+            umd_nm, jibun, road_nm, umd_cd, cdeal_type, dealing_gbn,
+            lat, lng, fetched_at
+        ) VALUES
+        <foreach item="item" collection="items" separator=",">
+            (
+                #{item.sggCd}, #{item.dealYmd}, #{item.aptNm}, #{item.dealAmount},
+                #{item.excluUseAr}, #{item.floor}, #{item.buildYear},
+                #{item.dealYear}, #{item.dealMonth}, #{item.dealDay},
+                #{item.umdNm}, #{item.jibun}, #{item.roadNm}, #{item.umdCd},
+                #{item.cdealType}, #{item.dealingGbn},
+                #{item.lat}, #{item.lng}, NOW()
+            )
+        </foreach>
+    </insert>
+
+    <!-- 캐시 갱신: 기존 데이터 삭제 (시군구+년월 단위) -->
+    <delete id="deleteBySggCdAndDealYmd">
+        DELETE FROM apt_trade_cache
+        WHERE sgg_cd = #{sggCd} AND deal_ymd = #{dealYmd}
+    </delete>
+
+</mapper>
