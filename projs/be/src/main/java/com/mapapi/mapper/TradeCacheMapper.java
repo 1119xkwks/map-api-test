@@ -40,4 +40,20 @@ public interface TradeCacheMapper {
      */
     void deleteBySggCdAndDealYmd(@Param("sggCd") String sggCd,
                                   @Param("dealYmd") String dealYmd);
+
+    /** 보이는 동 중 lat/lng이 NULL인 항목 조회 (추가 geocoding용) */
+    List<TradeItem> findNullLatByUmdNames(@Param("sggCd") String sggCd,
+                                           @Param("dealYmd") String dealYmd,
+                                           @Param("umdNames") List<String> umdNames);
+
+    /** geocoding 결과로 lat/lng 업데이트 */
+    void updateLatLng(@Param("id") int id, @Param("lat") double lat, @Param("lng") double lng);
+
+    /** 진단용: 시군구+년월 전체 건수 */
+    int countBySggCodesAndDealYmd(@Param("sggCodes") List<String> sggCodes,
+                                   @Param("dealYmd") String dealYmd);
+
+    /** 진단용: lat/lng이 NULL인 건수 */
+    int countNullLatBySggCodesAndDealYmd(@Param("sggCodes") List<String> sggCodes,
+                                          @Param("dealYmd") String dealYmd);
 }

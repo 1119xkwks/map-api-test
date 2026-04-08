@@ -33,7 +33,7 @@
 
 ## 참고 문서
 
-- **`.claude/docs/getRTMSDataSvcAptTradeDev.hwp`** — 국토교통부 아파트 매매 실거래가 상세 자료 API 명세서. API 요청/응답 스펙은 이 문서를 기준으로 한다.
+- **`.claude/docs/apt_trade_api.md`** — 국토교통부 아파트 매매 실거래가 상세 자료 API 명세서. API 요청/응답 스펙은 이 문서를 기준으로 한다.
 - **`.claude/docs/dong_codes.txt`** — 법정동 코드 목록. API 요청 파라미터 `LAWD_CD`(지역코드)는 이 파일의 법정동 코드 앞 5자리를 사용한다.
 
 

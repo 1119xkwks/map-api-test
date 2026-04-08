@@ -67,22 +67,28 @@ public class ApartmentController {
             validateDealYmd(dealYmd);
         }
 
-        log.info("아파트 실거래가 조회: bounds=[{},{},{},{}], dealYmd={}",
-                swLat, swLng, neLat, neLng, dealYmd);
+        // 지도 중심 좌표 계산
+        double centerLat = (swLat + neLat) / 2;
+        double centerLng = (swLng + neLng) / 2;
 
-        // 1. bounds 영역의 시군구 코드 추출
-        List<String> sggCodes = regionService.getRegionCodes(swLat, swLng, neLat, neLng);
+        log.info("아파트 실거래가 조회: center=({},{}), bounds=[{},{},{},{}], dealYmd={}",
+                centerLat, centerLng, swLat, swLng, neLat, neLng, dealYmd);
 
-        if (sggCodes.isEmpty()) {
-            log.warn("시군구 코드를 찾을 수 없음");
+        // 1. 지도 중심 좌표 → 시군구 코드 + 동 이름 (Kakao API 1회)
+        RegionService.RegionInfo regionInfo = regionService.getRegionInfo(centerLat, centerLng);
+
+        if (regionInfo == null) {
+            log.warn("시군구 코드를 찾을 수 없음: center=({},{})", centerLat, centerLng);
             return ApartmentResponse.ok(dealYmd, List.of());
         }
 
-        // 2. 거래 데이터 조회 (캐시 확인 + 공공API 호출 + Geocoding)
-        List<TradeItem> items = tradeService.getTradeData(
-                sggCodes, dealYmd, swLat, swLng, neLat, neLng);
+        // 2. 해당 동의 거래 데이터 조회 (최근 3개월 순차, 해당 동만 geocoding)
+        TradeService.TradeResult result = tradeService.getTradeData(
+                regionInfo.getSggCd(), regionInfo.getUmdNm(),
+                regionInfo.getAddressPrefix(), dealYmd,
+                swLat, swLng, neLat, neLng);
 
-        return ApartmentResponse.ok(dealYmd, items);
+        return ApartmentResponse.ok(result.getDealYmd(), result.getItems());
     }
 
     /**
@@ -93,6 +99,43 @@ public class ApartmentController {
         return ConfigResponse.ok(Map.of(
                 "kakaoJsKey", appProperties.getKakao().getJavascriptKey()
         ));
+    }
+
+    /**
+     * 테스트용: 도로명 주소 → Kakao geocode 결과 직접 확인
+     * 예: GET /api/test/geocode?address=서울특별시 송파구 송이로31길 56
+     */
+    @GetMapping("/api/test/geocode")
+    public Map<String, Object> testGeocode(@RequestParam("address") String address) {
+        log.info("[TEST geocode] address='{}'", address);
+
+        try {
+            String encodedQuery = java.net.URLEncoder.encode(address, java.nio.charset.StandardCharsets.UTF_8);
+            String url = "https://dapi.kakao.com/v2/local/search/address?query=" + encodedQuery;
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Authorization", "KakaoAK " + appProperties.getKakao().getRestApiKey());
+            org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
+            org.springframework.web.client.RestTemplate rt = new org.springframework.web.client.RestTemplate();
+            org.springframework.http.ResponseEntity<String> response = rt.exchange(
+                    url, org.springframework.http.HttpMethod.GET, entity, String.class);
+
+            log.info("[TEST geocode] HTTP {}, body={}", response.getStatusCode(), response.getBody());
+
+            return Map.of(
+                    "address", address,
+                    "url", url,
+                    "status", response.getStatusCode().toString(),
+                    "body", response.getBody() != null ? response.getBody() : "null"
+            );
+        } catch (Exception e) {
+            log.error("[TEST geocode] 에러: {}", e.getMessage(), e);
+            return Map.of(
+                    "address", address,
+                    "error", e.getMessage()
+            );
+        }
     }
 
     /**

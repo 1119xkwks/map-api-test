@@ -55,4 +55,45 @@
         WHERE sgg_cd = #{sggCd} AND deal_ymd = #{dealYmd}
     </delete>
 
+    <!-- 보이는 동 중 lat/lng이 NULL인 항목 조회 -->
+    <select id="findNullLatByUmdNames" resultType="com.mapapi.dto.TradeItem">
+        SELECT id, apt_nm, deal_amount, exclu_use_ar, floor, build_year,
+               deal_year, deal_month, deal_day, umd_nm, jibun, road_nm,
+               sgg_cd, umd_cd, cdeal_type, dealing_gbn, deal_ymd
+        FROM apt_trade_cache
+        WHERE sgg_cd = #{sggCd}
+          AND deal_ymd = #{dealYmd}
+          AND (lat IS NULL OR lng IS NULL)
+          AND umd_nm IN
+            <foreach item="name" collection="umdNames" open="(" separator="," close=")">
+                #{name}
+            </foreach>
+    </select>
+
+    <!-- geocoding 결과로 lat/lng 업데이트 -->
+    <update id="updateLatLng">
+        UPDATE apt_trade_cache SET lat = #{lat}, lng = #{lng} WHERE id = #{id}
+    </update>
+
+    <!-- 진단용: 시군구+년월 전체 건수 -->
+    <select id="countBySggCodesAndDealYmd" resultType="int">
+        SELECT COUNT(*) FROM apt_trade_cache
+        WHERE sgg_cd IN
+            <foreach item="code" collection="sggCodes" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+          AND deal_ymd = #{dealYmd}
+    </select>
+
+    <!-- 진단용: lat/lng이 NULL인 건수 -->
+    <select id="countNullLatBySggCodesAndDealYmd" resultType="int">
+        SELECT COUNT(*) FROM apt_trade_cache
+        WHERE sgg_cd IN
+            <foreach item="code" collection="sggCodes" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+          AND deal_ymd = #{dealYmd}
+          AND (lat IS NULL OR lng IS NULL)
+    </select>
+
 </mapper>

@@ -6,6 +6,7 @@ package com.mapapi.dto;
  */
 public class TradeItem {
 
+    private int id;              // DB PK (apt_trade_cache.id)
     private String aptNm;        // 아파트명
     private String dealAmount;   // 거래금액 (만원, 콤마 포함)
     private Double lat;          // 위도
@@ -27,11 +28,17 @@ public class TradeItem {
     private String dealMonth;    // 거래월
     private String dealDay;      // 거래일
     private String umdCd;        // 읍면동코드
+    private String roadNmBonbun; // 도로명 본번
+    private String roadNmBubun;  // 도로명 부번
+    private String roadNmSggCd;  // 도로명 시군구코드
 
     public TradeItem() {
     }
 
     // --- Getters & Setters ---
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getAptNm() {
         return aptNm;
@@ -184,6 +191,15 @@ public class TradeItem {
     public void setUmdCd(String umdCd) {
         this.umdCd = umdCd;
     }
+
+    public String getRoadNmBonbun() { return roadNmBonbun; }
+    public void setRoadNmBonbun(String roadNmBonbun) { this.roadNmBonbun = roadNmBonbun; }
+
+    public String getRoadNmBubun() { return roadNmBubun; }
+    public void setRoadNmBubun(String roadNmBubun) { this.roadNmBubun = roadNmBubun; }
+
+    public String getRoadNmSggCd() { return roadNmSggCd; }
+    public void setRoadNmSggCd(String roadNmSggCd) { this.roadNmSggCd = roadNmSggCd; }
 
     /**
      * dealYear, dealMonth, dealDay로부터 "YYYY-MM-DD" 형식의 dealDate를 생성한다.
